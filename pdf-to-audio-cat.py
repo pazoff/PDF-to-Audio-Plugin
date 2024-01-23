@@ -77,8 +77,8 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
         last_pdf_page = pdf_pages
     print("Processing the PDF(pages from " + str(first_pdf_page) + " to " + str(
         last_pdf_page) + "), extracting and formatting the text ...")
-    cat.send_ws_message(content="Processing the PDF (pages from " + str(first_pdf_page) + " to " + str(
-        last_pdf_page) + "), extracting and formatting the text ...", msg_type='chat')
+    cat.send_ws_message(content="Processing the PDF pages from " + str(first_pdf_page) + " to " + str(
+        last_pdf_page) + " ...", msg_type='chat')
 
     # Extract all the text
     text = ""
