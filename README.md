@@ -12,5 +12,7 @@ PDF to Audio Cat plugin for your [Cheshire cat](https://github.com/cheshire-cat-
 ### Example:
 <img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/pdf-to-mp3-cat.png">
 
+* Conversion of PDFs with too many pages (>100) could be resource intensive task and can take a long time, depending on your hardware!
+
 
 
