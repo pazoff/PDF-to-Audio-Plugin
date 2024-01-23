@@ -1,0 +1,3 @@
+pydub
+PyPDF2
+mycroft-mimic3-tts[all]

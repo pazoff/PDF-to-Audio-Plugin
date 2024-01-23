@@ -1,0 +1,8 @@
+{
+    "name": "PDF to Audio Cat",
+    "description": "Convert PDF files to MP3, OGG and WAV audio formats",
+    "author_name": "Pazoff",
+    "tags": "mp3,wav,ogg,audio,converter",
+    "plugin_url": "https://github.com/pazoff/PDF-to-Audio-Plugin",
+    "version": "0.0.1"
+}
