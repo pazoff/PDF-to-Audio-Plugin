@@ -183,7 +183,7 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
     if not os.path.exists(filepath):
         print(f"The file {pdf_file_name} does not exist in cat/static/pdftomp3 folder!")
         #cat.send_ws_message(content=f"The file {pdf_file_name} does not exist.", msg_type='chat')
-        return f"The file cat/static/pdftomp3/<b>{pdf_file_name}</b> does NOT exist."
+        return f"The file cat/static/pdftomp3/<b>{pdf_file_name}</b> does NOT exist.<br>The file must be in <b>cat/static/pdftomp3</b> folder!"
 
     # Specify the folder path
     folder_path = filepath + "-audio"
