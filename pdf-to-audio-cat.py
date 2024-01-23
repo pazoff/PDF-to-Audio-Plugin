@@ -1,4 +1,5 @@
 import os
+import time
 import subprocess
 import PyPDF2
 from pydub import AudioSegment
@@ -33,6 +34,10 @@ def install_ffmpeg():
 def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, output_mp3_filename: str,
                          output_text_filename: str, selected_voice: str,
                          first_pdf_page: int, last_pdf_page: int, cat):
+    
+    # Record the start time
+    start_time = time.time()
+
     # Text to speech command
     mimic_cmd = ["mimic3", "--cuda"]
 
@@ -148,8 +153,18 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             print("\n* Converting " + output_wav_filename + " file to " + output_mp3_filename + " ...")
             AudioSegment.from_wav(output_wav_filename).export(output_mp3_filename, format="mp3",
                                                               bitrate="320")
-            print("Done.")
-            cat.send_ws_message(content=f'<b>{output_mp3_filename}</b> is ready.', msg_type='chat')
+            
+            # Record the end time
+            end_time = time.time()
+
+            # Calculate the execution time in seconds
+            execution_time_seconds = end_time - start_time
+
+            # Convert the execution time to minutes
+            execution_time_minutes = execution_time_seconds / 60
+
+            print(f"Done in {execution_time_minutes:.2f} minutes")
+            cat.send_ws_message(content=f'Audio file <b>{output_mp3_filename.replace("/app/", "")}</b> was ready in {execution_time_minutes:.2f} minutes = {execution_time_seconds:.2f} seconds.', msg_type='chat')
             # Convert to ogg
             print("\n* Converting " + output_wav_filename + " file to " + output_mp3_filename[
                                                                           :(len(output_mp3_filename) - 4)] + ".ogg ...")
@@ -194,14 +209,20 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
 
     if user_message.startswith("pdftomp3"):
         check_ffmpeg_installation()
-        if len(user_message.split()) >= 2:
-            pdf_filename_to_convert = user_message.split(" ")[1] 
-            response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
-            return_direct = True
-        else:
-            response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be in cat/static/pdftomp3 folder!"
-            return_direct = True
 
+        if len(user_message.split()) >= 2:
+            second_word = user_message.split(" ")[1]
+
+            if second_word != "":
+                pdf_filename_to_convert = second_word
+                response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
+                return_direct = True
+            else:
+                response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be in cat/static/pdftomp3 folder!"
+                return_direct = True
+        else:
+            response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be provided in the message."
+            return_direct = True
 
     # Manage response
     if return_direct:
