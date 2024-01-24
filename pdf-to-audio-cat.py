@@ -217,19 +217,20 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
     if user_message.startswith("pdftomp3"):
         check_ffmpeg_installation()
 
-        if len(user_message.split()) >= 2:
-            second_word = user_message.split(" ")[1]
+        # Split user_message into two strings
+        _, *args = user_message.split(maxsplit=1)
 
-            if second_word != "":
-                pdf_filename_to_convert = second_word
-                response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
-                return_direct = True
-            else:
-                response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be in cat/static/pdftomp3 folder!"
-                return_direct = True
-        else:
-            response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be provided in the message."
+        if args:
+            pdf_filename_to_convert = args[0]
+            response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
             return_direct = True
+        else:
+            response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be in cat/static/pdftomp3 folder!"
+            return_direct = True
+
+    else:
+        response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be provided in the message."
+        return_direct = True
 
     # Manage response
     if return_direct:
