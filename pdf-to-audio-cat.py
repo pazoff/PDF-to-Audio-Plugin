@@ -228,9 +228,6 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
             response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be in cat/static/pdftomp3 folder!"
             return_direct = True
 
-    else:
-        response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be provided in the message."
-        return_direct = True
 
     # Manage response
     if return_direct:
