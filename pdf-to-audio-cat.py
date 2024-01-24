@@ -117,14 +117,21 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
 
         # 0.003594915 seconds per bite
         # 0.018959232 is calculated on 195 min base(3h15min)
-        print("Estimated completion time: " + str(
-            int((os.path.getsize(output_text_filename) * 0.003594915) * 100) / 100) + " seconds = " + str(
-            int((os.path.getsize(output_text_filename) * 0.003594915 / 60) * 100) / 100) + " minutes = " + str(
-            int((os.path.getsize(output_text_filename) * 0.003594915 / 3600) * 100) / 100) + " hours.")
-        cat.send_ws_message(content="Estimated completion time: " + str(
-            int((os.path.getsize(output_text_filename) * 0.003594915) * 100) / 100) + " seconds = " + str(
-            int((os.path.getsize(output_text_filename) * 0.003594915 / 60) * 100) / 100) + " minutes = " + str(
-            int((os.path.getsize(output_text_filename) * 0.003594915 / 3600) * 100) / 100) + " hours.", msg_type='chat')
+        
+        esti_coef = 0.005103186
+        
+        # how to calculate esti_coef(=X_your_coef) for your system
+        # Estimated completion time --> esti_coef
+        # execution_time_seconds --> X_your_coef
+        # (execution_time_seconds * esti_coef) / Estimated completion time = X_your_coef
+        # set esti_coef = X_your_coef
+
+        estimated_message = "Estimated completion time: " + str(
+            int((os.path.getsize(output_text_filename) * esti_coef) * 100) / 100) + " seconds = " + str(
+            int((os.path.getsize(output_text_filename) * esti_coef / 60) * 100) / 100) + " minutes = " + str(
+            int((os.path.getsize(output_text_filename) * esti_coef / 3600) * 100) / 100) + " hours."
+        print(estimated_message)
+        cat.send_ws_message(content=estimated_message, msg_type='chat')
 
         # Generate the speech audio
         # Open the text file
