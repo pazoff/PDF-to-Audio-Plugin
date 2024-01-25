@@ -20,4 +20,23 @@ PDF to Audio Cat plugin for your [Cheshire cat](https://github.com/cheshire-cat-
 <img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/img/step-2.png">
 
 
+Updated to version 0.0.3:
+Added functions to manage the audio collection
+
+<img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/img/1-pdf2mp3.png">
+
+  
+<b>pdf2mp3 list</b> to download your audio files
+
+  
+<img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/img/2-pdf2mp3-list.png">
+
+  
+<b>pdf2mp3 remove pdf-file.pdf</b> to remove the file and its audio collection
+
+  
+<img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/img/3-pdf2mp3-remove.png">
+    
+
+
 
