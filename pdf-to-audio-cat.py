@@ -204,7 +204,10 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
 
     if not os.path.exists(filepath):
         print(f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.bin")
-        return f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.<b>bin</b>"
+        pdf_files_available = str(find_pdf_files(pdf_data_dir))
+        if len(pdf_files_available) >= 2:
+            pdf_files_available = pdf_files_available[1:-1]
+        return f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.<b>bin</b><br>{pdf_files_available}"
 
     # Specify the folder path
     folder_path = filepath + "-audio"
@@ -221,6 +224,22 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
     tr = threading.Thread(target=convert_pdf_to_audio, args=(filepath, wav_file_name, mp3_file_name, txt_file_name, "5", 1, -1, cat))
     tr.start()
     return f"Converting <b>{pdf_file_name}</b> to audio in the background. You can continue using the Cat ..."
+
+
+def find_pdf_files(folder_path):
+    try:
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            print(f"Folder '{folder_path}' didn't exist and has been created.")
+
+        pdf_files = [file for file in os.listdir(folder_path) if file.endswith('.pdf')]
+        return pdf_files
+    except PermissionError:
+        print(f"Error: Permission denied for folder '{folder_path}'.")
+        return []
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return []
 
 
 class ConvertParser(BaseBlobParser, ABC):
@@ -276,7 +295,10 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
             response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
             return_direct = True
         else:
-            response = "<b>How to convert a PDF file to Audio:</b><br><b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file.pdf.bin</i><br><b>Upload</b> the <i>pdf-file.pdf.bin</i> via <b>Upload file</b><br><b>Type:</b> pdf2mp3 <i>pdf-file.pdf</i>"
+            pdf_files_available = str(find_pdf_files(pdf_data_dir))
+            if len(pdf_files_available) >= 2:
+                pdf_files_available = pdf_files_available[1:-1]
+            response = f"<b>How to convert a PDF file to Audio:</b><br><b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file.pdf.bin</i><br><b>Upload</b> the <i>pdf-file.pdf.bin</i> via <b>Upload file</b><br><b>Type:</b> pdf2mp3 <i>pdf-file.pdf</i><br>{pdf_files_available}"
             return_direct = True
 
 
