@@ -5,5 +5,5 @@
     "tags": "pdf,mp3,wav,ogg,audio,converter",
     "plugin_url": "https://github.com/pazoff/PDF-to-Audio-Plugin",
     "thumb": "https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/logo-pdf-to-mp3-cat.jpg",
-    "version": "0.0.2"
+    "version": "0.0.3"
 }

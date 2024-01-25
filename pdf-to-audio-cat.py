@@ -204,7 +204,7 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
 
     if not os.path.exists(filepath):
         print(f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.bin")
-        pdf_files_available = str(find_pdf_files(pdf_data_dir))
+        pdf_files_available = str(find_pdf_files(pdf_data_dir, only_not_converted = True))
         if len(pdf_files_available) >= 2:
             pdf_files_available = pdf_files_available[1:-1]
         return f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.<b>bin</b><br>{pdf_files_available}"
@@ -226,20 +226,103 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
     return f"Converting <b>{pdf_file_name}</b> to audio in the background. You can continue using the Cat ..."
 
 
-def find_pdf_files(folder_path):
+def find_pdf_files(folder_path, only_not_converted=None):
     try:
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
             print(f"Folder '{folder_path}' didn't exist and has been created.")
 
         pdf_files = [file for file in os.listdir(folder_path) if file.endswith('.pdf')]
+
+        if only_not_converted:
+            pdf_files = [pdf for pdf in pdf_files if not os.path.exists(os.path.join(folder_path, f"{pdf}-audio"))]
+        
         return pdf_files
+
     except PermissionError:
         print(f"Error: Permission denied for folder '{folder_path}'.")
         return []
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return []
+
+def find_audio_files(folder_path, pdf_files):
+    audio_files = []
+
+    try:
+        for pdf_name in pdf_files:
+
+            audio_folder = os.path.join(folder_path, f"{pdf_name}-audio")
+
+            if os.path.exists(audio_folder) and os.path.isdir(audio_folder):
+                # Check for audio files in the "-audio" folder
+                audio_files.extend([
+                    os.path.join(audio_folder, f"{pdf_name}.mp3"),
+                    os.path.join(audio_folder, f"{pdf_name}.wav"),
+                    os.path.join(audio_folder, f"{pdf_name}.ogg")
+                ])
+
+    except Exception as e:
+        print(f"An unexpected error occurred while searching for audio files: {e}")
+        audio_files = []
+
+    return audio_files
+
+def list_audio_files(folder_path):
+    try:
+        pdf_files = find_pdf_files(folder_path)
+        audio_files = find_audio_files(folder_path, pdf_files)
+
+        result = []
+
+        for pdf_file in pdf_files:
+            #pdf_base, _ = os.path.splitext(pdf_file)
+            pdf_base = pdf_file
+            audio_folder = os.path.join(folder_path, f"{pdf_base}-audio")
+
+            if os.path.exists(audio_folder) and os.path.isdir(audio_folder):
+                result.append(f"<b>{pdf_base}</b>: <a href='{audio_folder}/{pdf_base}.mp3' target='_blank'>MP3</a> <a href='{audio_folder}/{pdf_base}.wav' target='_blank'>WAV</a> <a href='{audio_folder}/{pdf_base}.ogg' target='_blank'>OGG</a>")
+        
+            else:
+                result.append(f"<b>{pdf_base}</b>: No audio files found")
+
+        return result
+
+    except Exception as e:
+        print(f"An unexpected error occurred in list_audio_files: {e}")
+        return []
+
+def delete_file_and_audio_folder(folder_path, filename):
+    try:
+        file_path = os.path.join(folder_path, filename)
+        audio_folder_path = os.path.join(folder_path, f"{filename}-audio")
+
+        result_message = ""
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            result_message += f"File <b>{filename}</b> deleted.\n"
+        else:
+            result_message += f"File <b>{filename}</b> not found.\n"
+
+        if os.path.exists(audio_folder_path) and os.path.isdir(audio_folder_path):
+            # If the "-audio" folder exists, delete it and its contents
+            for root, dirs, files in os.walk(audio_folder_path, topdown=False):
+                for file in files:
+                    os.remove(os.path.join(root, file))
+                for dir_name in dirs:
+                    os.rmdir(os.path.join(root, dir_name))
+            os.rmdir(audio_folder_path)
+            result_message += f"Audio folder <b>{filename}-audio</b> and its contents deleted."
+        else:
+            result_message += f"Audio folder <b>{filename}-audio</b> not found."
+
+        return result_message
+
+    except PermissionError:
+        return "Error: Permission denied for folder or file."
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
 
 
 class ConvertParser(BaseBlobParser, ABC):
@@ -291,14 +374,30 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
         _, *args = user_message.split(maxsplit=1)
 
         if args:
+            if args[0] == "list":
+                audio_file_list = list_audio_files(pdf_data_dir)
+                if audio_file_list != []:
+                    response = "\n".join(audio_file_list)
+                    return {"output": response}
+                else:
+                    return {"output": "No audio files available"}
+
+            if args[0].startswith("remove"):
+                _, *subargs = args[0].split(maxsplit=1)
+                if subargs:
+                    result_message = delete_file_and_audio_folder(pdf_data_dir, subargs[0])
+                    return {"output": result_message}
+                else:
+                    return {"output": "Please, type a <b>pdf-file.pdf</b> to be removed: <i>pdf2mp3 remove <b>pdf-file.pdf</b></i>"}
+
             pdf_filename_to_convert = args[0]
             response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
             return_direct = True
         else:
-            pdf_files_available = str(find_pdf_files(pdf_data_dir))
+            pdf_files_available = str(find_pdf_files(pdf_data_dir, only_not_converted = True))
             if len(pdf_files_available) >= 2:
                 pdf_files_available = pdf_files_available[1:-1]
-            response = f"<b>How to convert a PDF file to Audio:</b><br><b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file.pdf.bin</i><br><b>Upload</b> the <i>pdf-file.pdf.bin</i> via <b>Upload file</b><br><b>Type:</b> pdf2mp3 <i>pdf-file.pdf</i><br>{pdf_files_available}"
+            response = f"<b>How to convert a PDF file to Audio:</b><br>1.<b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file<b>.pdf.bin</b></i><br>2.<b>Upload</b> the <i>pdf-file<b>.pdf.bin</b></i> via <b>Upload file</b><br>3.<b>Type:</b> <i>pdf2mp3 pdf-file<b>.pdf</b></i><br>{pdf_files_available}<br><b>Type:</b> <i>pdf2mp3 list</i> to download your audio files<br><b>Type:</b> <i>pdf2mp3 remove pdf-file<b>.pdf</b></i> to remove the file and its audio collection"
             return_direct = True
 
 
