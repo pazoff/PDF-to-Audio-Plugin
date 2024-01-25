@@ -1,8 +1,8 @@
 {
     "name": "PDF to Audio Cat",
-    "description": "Convert PDF files to MP3, OGG and WAV audio formats. Usage: pdftomp3 filename.pdf - filename.pdf must be in cat/static/pdftomp3 folder.",
+    "description": "Convert PDF files to MP3, OGG and WAV audio formats and listen to your documents instead of reading them. How to use the plugin? Install and enable it then type: pdf2mp3   * Conversion of PDFs with many pages (>200) could be a resource intensive task and could take a long time, depending on your hardware!",
     "author_name": "Pazoff",
     "tags": "mp3,wav,ogg,audio,converter",
     "plugin_url": "https://github.com/pazoff/PDF-to-Audio-Plugin",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }

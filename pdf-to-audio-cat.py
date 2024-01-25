@@ -7,6 +7,15 @@ from typing import Dict
 from cat.mad_hatter.decorators import tool, hook
 from cat.log import log
 import threading
+from langchain.document_loaders.base import BaseBlobParser
+from langchain.docstore.document import Document
+from langchain.document_loaders.blob_loaders.schema import Blob
+from typing import Iterator
+from abc import ABC
+
+
+
+pdf_data_dir = "/admin/assets/pdftoaudio/"
 
 
 def check_ffmpeg_installation():
@@ -171,13 +180,17 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             execution_time_minutes = execution_time_seconds / 60
 
             print(f"Done in {execution_time_minutes:.2f} minutes")
-            cat.send_ws_message(content=f'Audio file <b>{output_mp3_filename.replace("/app/", "")}</b> was ready in {execution_time_minutes:.2f} minutes = {execution_time_seconds:.2f} seconds.', msg_type='chat')
+            
             # Convert to ogg
-            print("\n* Converting " + output_wav_filename + " file to " + output_mp3_filename[
-                                                                          :(len(output_mp3_filename) - 4)] + ".ogg ...")
-            AudioSegment.from_wav(output_wav_filename).export(
-                output_mp3_filename[:(len(output_mp3_filename) - 4)] + ".ogg", format="ogg")
+            output_ogg_filename = output_mp3_filename[:(len(output_mp3_filename) - 4)] + ".ogg"
+            print("\n* Converting " + output_wav_filename + " file to " + output_ogg_filename)
+            AudioSegment.from_wav(output_wav_filename).export(output_ogg_filename, format="ogg")
             print("Done.")
+
+            # Generate the audio player HTML and send it as a chat message
+            audio_player = "<audio controls><source src='" + output_mp3_filename + "' type='audio/wav'>Your browser does not support the audio tag.</audio>"
+            cat.send_ws_message(content=audio_player, msg_type='chat')
+            cat.send_ws_message(content=f'The <a href="{output_mp3_filename}" target="_blank">MP3</a> (<a href="{output_wav_filename}" target="_blank">WAV</a>,<a href="{output_ogg_filename}" target="_blank">OGG</a>) was ready in {execution_time_minutes:.2f} minutes = {execution_time_seconds:.2f} seconds.', msg_type='chat')
 
     # Close the PDF file
     pdf_file.close()
@@ -185,12 +198,13 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
 # End of convert_pdf_to_audio()
 
 def do_convert_pdf_to_audio(pdf_file_name, cat):
-    filepath = "/app/cat/static/pdftomp3/" + pdf_file_name
+    
+    filepath = pdf_data_dir + pdf_file_name
+    
 
     if not os.path.exists(filepath):
-        print(f"The file {pdf_file_name} does not exist in cat/static/pdftomp3 folder!")
-        #cat.send_ws_message(content=f"The file {pdf_file_name} does not exist.", msg_type='chat')
-        return f"The file cat/static/pdftomp3/<b>{pdf_file_name}</b> does NOT exist.<br>The file must be in <b>cat/static/pdftomp3</b> folder!"
+        print(f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.bin")
+        return f"The file {pdf_file_name} does not exist! Please, upload {pdf_file_name}.<b>bin</b>"
 
     # Specify the folder path
     folder_path = filepath + "-audio"
@@ -208,13 +222,50 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
     tr.start()
     return f"Converting <b>{pdf_file_name}</b> to audio in the background. You can continue using the Cat ..."
 
+
+class ConvertParser(BaseBlobParser, ABC):
+    
+    def lazy_parse(self, blob: Blob) -> Iterator[Document]:
+        
+        original_filename = blob.source
+        if original_filename.endswith(".bin"):
+            original_filename = original_filename[:-4]
+        
+        if not os.path.exists(pdf_data_dir):
+            os.makedirs(pdf_data_dir)
+
+        file_to_convert_path = os.path.join(pdf_data_dir, original_filename)
+
+        with blob.as_bytes_io() as file:
+            # Extract bytes from BytesIO object
+            text_bytes = file.getvalue()
+
+        # Write the content to the pdf file in pdf_data_dir
+        with open(file_to_convert_path, "wb") as pdf_file:
+            pdf_file.write(text_bytes)
+        
+        yield Document(page_content="original_filename", metadata={"source": original_filename})
+       
+
+
+@hook
+def rabbithole_instantiates_parsers(file_handlers: dict, cat) -> dict:
+
+    new_handlers = {
+        "application/octet-stream": ConvertParser(),
+        # Add other file extensions and corresponding parsers as needed
+    }
+
+    file_handlers = file_handlers | new_handlers
+    return file_handlers
+
 @hook(priority=7)
 def agent_fast_reply(fast_reply, cat) -> Dict:
     return_direct = False
     # Get user message
     user_message = cat.working_memory["user_message_json"]["text"]
 
-    if user_message.startswith("pdftomp3"):
+    if user_message.startswith("pdf2mp3"):
         check_ffmpeg_installation()
 
         # Split user_message into two strings
@@ -225,7 +276,7 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
             response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
             return_direct = True
         else:
-            response = "<b>Usage:</b> pdftomp3 filename.pdf<br>filename.pdf must be in cat/static/pdftomp3 folder!"
+            response = "<b>How to convert a PDF file to Audio:</b><br><b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file.pdf.bin</i><br><b>Upload</b> the <i>pdf-file.pdf.bin</i> via <b>Upload file</b><br><b>Type:</b> pdf2mp3 <i>pdf-file.pdf</i>"
             return_direct = True
 
 
