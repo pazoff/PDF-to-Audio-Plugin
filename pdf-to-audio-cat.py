@@ -44,156 +44,161 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
                          output_text_filename: str, selected_voice: str,
                          first_pdf_page: int, last_pdf_page: int, cat):
     
-    # Record the start time
-    start_time = time.time()
+    try:
+        # Record the start time
+        start_time = time.time()
 
-    # Text to speech command
-    mimic_cmd = ["mimic3", "--cuda"]
+        # Text to speech command
+        mimic_cmd = ["mimic3", "--cuda"]
 
-    # Selected voice
-    if selected_voice not in ["1", "2", "3", "4", "5", "6", "7"]:
-        selected_voice = "5"
-    if selected_voice == "2":
-        mimic_cmd.append("--voice")
-        mimic_cmd.append("en_US/ljspeech_low")
-    if selected_voice == "3":
-        mimic_cmd.append("--voice")
-        mimic_cmd.append("en_US/hifi-tts_low")
-        mimic_cmd.append("--speaker")
-        mimic_cmd.append("6097")
-    if selected_voice == "4":
-        mimic_cmd.append("--voice")
-        mimic_cmd.append("en_US/hifi-tts_low")
-        mimic_cmd.append("--speaker")
-        mimic_cmd.append("92")
-    if selected_voice == "5":
-        mimic_cmd.append("--voice")
-        mimic_cmd.append("en_US/vctk_low")
-        mimic_cmd.append("--speaker")
-        mimic_cmd.append("p303")
-    if selected_voice == "6":
-        mimic_cmd.append("--voice")
-        mimic_cmd.append("en_US/cmu-arctic_low")
-        mimic_cmd.append("--speaker")
-        mimic_cmd.append("aew")
-    if selected_voice == "7":
-        mimic_cmd.append("--voice")
-        mimic_cmd.append("en_US/hifi-tts_low")
-        mimic_cmd.append("--speaker")
-        mimic_cmd.append("6097")
+        # Selected voice
+        if selected_voice not in ["1", "2", "3", "4", "5", "6", "7"]:
+            selected_voice = "5"
+        if selected_voice == "2":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/ljspeech_low")
+        if selected_voice == "3":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/hifi-tts_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("6097")
+        if selected_voice == "4":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/hifi-tts_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("92")
+        if selected_voice == "5":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/vctk_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("p303")
+        if selected_voice == "6":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/cmu-arctic_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("aew")
+        if selected_voice == "7":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/hifi-tts_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("6097")
 
 
-    # Read the contents of each page
-    pdf_file = open(pdf_input_filename, 'rb')
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
-    pdf_pages = len(pdf_reader.pages)
-    if int(last_pdf_page) == -1:
-        last_pdf_page = pdf_pages
-    print("Processing the PDF(pages from " + str(first_pdf_page) + " to " + str(
-        last_pdf_page) + "), extracting and formatting the text ...")
-    cat.send_ws_message(content="Processing the PDF pages from " + str(first_pdf_page) + " to " + str(
-        last_pdf_page) + " ...", msg_type='chat')
+        # Read the contents of each page
+        pdf_file = open(pdf_input_filename, 'rb')
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        pdf_pages = len(pdf_reader.pages)
+        if int(last_pdf_page) == -1:
+            last_pdf_page = pdf_pages
+        print("Processing the PDF(pages from " + str(first_pdf_page) + " to " + str(
+            last_pdf_page) + "), extracting and formatting the text ...")
+        cat.send_ws_message(content="Processing the PDF pages from " + str(first_pdf_page) + " to " + str(
+            last_pdf_page) + " ...", msg_type='chat')
 
-    # Extract all the text
-    text = ""
-    # len(pdf_reader.pages)
-    for page in range(first_pdf_page - 1, last_pdf_page):
-        text += pdf_reader.pages[page].extract_text()
+        # Extract all the text
+        text = ""
+        # len(pdf_reader.pages)
+        for page in range(first_pdf_page - 1, last_pdf_page):
+            text += pdf_reader.pages[page].extract_text()
 
-    # Prepare the text. Remove some special chars
-    text = text.replace('\n', ' ').replace('\r', ' ').replace('•', ' ').replace('~', ' ').replace('#',
-                                                                                                  ' ').replace(
-        '*', ' ').replace('■', ' ').replace('®', ' ').replace('©', ' ')
+        # Prepare the text. Remove some special chars
+        text = text.replace('\n', ' ').replace('\r', ' ').replace('•', ' ').replace('~', ' ').replace('#',
+                                                                                                      ' ').replace(
+            '*', ' ').replace('■', ' ').replace('®', ' ').replace('©', ' ')
 
-    text = " ".join(text.split())
-    text = text.replace('. ', '.\n')
-    while ".\n.\n" in text:
-        text = text.replace('.\n.\n', '.\n')
-    text = text.replace(' .', '.')
-    print("Done.")
+        text = " ".join(text.split())
+        text = text.replace('. ', '.\n')
+        while ".\n.\n" in text:
+            text = text.replace('.\n.\n', '.\n')
+        text = text.replace(' .', '.')
+        print("Done.")
 
-    # Do we have text?
-    if len(text) > 0:
-        
-        # Save the text to a text file
-        with open(output_text_filename, "w") as f:
-            f.write(text)
-
-        # Generated text file info
-        print("* The text file is " + str(
-            int((os.path.getsize(output_text_filename) / 1024) * 100) / 100) + " kB (" + str(
-            int((os.path.getsize(output_text_filename) / 1024 / 1024) * 100) / 100) + " MB)")
-
-        # 0.003594915 seconds per bite
-        # 0.018959232 is calculated on 195 min base(3h15min)
-        
-        esti_coef = 0.005103186
-        
-        # how to calculate esti_coef(=X_your_coef) for your system
-        # Estimated completion time --> esti_coef
-        # execution_time_seconds --> X_your_coef
-        # (execution_time_seconds * esti_coef) / Estimated completion time = X_your_coef
-        # set esti_coef = X_your_coef
-
-        estimated_message = "Estimated completion time: " + str(
-            int((os.path.getsize(output_text_filename) * esti_coef) * 100) / 100) + " seconds = " + str(
-            int((os.path.getsize(output_text_filename) * esti_coef / 60) * 100) / 100) + " minutes = " + str(
-            int((os.path.getsize(output_text_filename) * esti_coef / 3600) * 100) / 100) + " hours."
-        print(estimated_message)
-        cat.send_ws_message(content=estimated_message, msg_type='chat')
-
-        # Generate the speech audio
-        # Open the text file
-        read_text_file = open(output_text_filename, "r")
-        # Open the wav file
-        save_wav_file = open(output_wav_filename, "wb")
-
-        # Print mimic commands
-        m_cmd = ""
-        for cmd in mimic_cmd:
-            m_cmd += (cmd + " ")
-        print("\n* Executing: " + m_cmd + " < " + output_text_filename + " > " + output_wav_filename + "\n")
-
-        # Execute mimic3 conversion
-
-        subprocess.run(mimic_cmd, stdin=read_text_file, stdout=save_wav_file)
-
-        # Close the wav and txt files
-        save_wav_file.close()
-        read_text_file.close()
-
-    # Convert the wav file to mp3 and ogg
-    if os.path.exists(output_wav_filename):
-        if os.path.getsize(output_wav_filename) > 0:
-            # Convert to mp3
-            print("\n* Converting " + output_wav_filename + " file to " + output_mp3_filename + " ...")
-            AudioSegment.from_wav(output_wav_filename).export(output_mp3_filename, format="mp3",
-                                                              bitrate="320")
+        # Do we have text?
+        if len(text) > 0:
             
-            # Record the end time
-            end_time = time.time()
+            # Save the text to a text file
+            with open(output_text_filename, "w") as f:
+                f.write(text)
 
-            # Calculate the execution time in seconds
-            execution_time_seconds = end_time - start_time
+            # Generated text file info
+            print("* The text file is " + str(
+                int((os.path.getsize(output_text_filename) / 1024) * 100) / 100) + " kB (" + str(
+                int((os.path.getsize(output_text_filename) / 1024 / 1024) * 100) / 100) + " MB)")
 
-            # Convert the execution time to minutes
-            execution_time_minutes = execution_time_seconds / 60
-
-            print(f"Done in {execution_time_minutes:.2f} minutes")
+            # 0.003594915 seconds per bite
+            # 0.018959232 is calculated on 195 min base(3h15min)
             
-            # Convert to ogg
-            output_ogg_filename = output_mp3_filename[:(len(output_mp3_filename) - 4)] + ".ogg"
-            print("\n* Converting " + output_wav_filename + " file to " + output_ogg_filename)
-            AudioSegment.from_wav(output_wav_filename).export(output_ogg_filename, format="ogg")
-            print("Done.")
+            esti_coef = 0.005103186
+            
+            # how to calculate esti_coef(=X_your_coef) for your system
+            # Estimated completion time --> esti_coef
+            # execution_time_seconds --> X_your_coef
+            # (execution_time_seconds * esti_coef) / Estimated completion time = X_your_coef
+            # set esti_coef = X_your_coef
 
-            # Generate the audio player HTML and send it as a chat message
-            audio_player = "<audio controls><source src='" + output_mp3_filename + "' type='audio/wav'>Your browser does not support the audio tag.</audio>"
-            cat.send_ws_message(content=audio_player, msg_type='chat')
-            cat.send_ws_message(content=f'The <a href="{output_mp3_filename}" target="_blank">MP3</a> (<a href="{output_wav_filename}" target="_blank">WAV</a>,<a href="{output_ogg_filename}" target="_blank">OGG</a>) was ready in {execution_time_minutes:.2f} minutes = {execution_time_seconds:.2f} seconds.', msg_type='chat')
+            estimated_message = "Estimated completion time: " + str(
+                int((os.path.getsize(output_text_filename) * esti_coef) * 100) / 100) + " seconds = " + str(
+                int((os.path.getsize(output_text_filename) * esti_coef / 60) * 100) / 100) + " minutes = " + str(
+                int((os.path.getsize(output_text_filename) * esti_coef / 3600) * 100) / 100) + " hours."
+            print(estimated_message)
+            cat.send_ws_message(content=estimated_message, msg_type='chat')
 
-    # Close the PDF file
-    pdf_file.close()
+            # Generate the speech audio
+            # Open the text file
+            read_text_file = open(output_text_filename, "r")
+            # Open the wav file
+            save_wav_file = open(output_wav_filename, "wb")
+
+            # Print mimic commands
+            m_cmd = ""
+            for cmd in mimic_cmd:
+                m_cmd += (cmd + " ")
+            print("\n* Executing: " + m_cmd + " < " + output_text_filename + " > " + output_wav_filename + "\n")
+
+            # Execute mimic3 conversion
+
+            subprocess.run(mimic_cmd, stdin=read_text_file, stdout=save_wav_file)
+
+            # Close the wav and txt files
+            save_wav_file.close()
+            read_text_file.close()
+
+        # Convert the wav file to mp3 and ogg
+        if os.path.exists(output_wav_filename):
+            if os.path.getsize(output_wav_filename) > 0:
+                # Convert to mp3
+                print("\n* Converting " + output_wav_filename + " file to " + output_mp3_filename + " ...")
+                AudioSegment.from_wav(output_wav_filename).export(output_mp3_filename, format="mp3",
+                                                                  bitrate="320")
+                
+                # Record the end time
+                end_time = time.time()
+
+                # Calculate the execution time in seconds
+                execution_time_seconds = end_time - start_time
+
+                # Convert the execution time to minutes
+                execution_time_minutes = execution_time_seconds / 60
+
+                print(f"Done in {execution_time_minutes:.2f} minutes")
+                
+                # Convert to ogg
+                output_ogg_filename = output_mp3_filename[:(len(output_mp3_filename) - 4)] + ".ogg"
+                print("\n* Converting " + output_wav_filename + " file to " + output_ogg_filename)
+                AudioSegment.from_wav(output_wav_filename).export(output_ogg_filename, format="ogg")
+                print("Done.")
+
+                # Generate the audio player HTML and send it as a chat message
+                audio_player = "<audio controls><source src='" + output_mp3_filename + "' type='audio/wav'>Your browser does not support the audio tag.</audio>"
+                cat.send_ws_message(content=audio_player, msg_type='chat')
+                cat.send_ws_message(content=f'The <a href="{output_mp3_filename}" target="_blank">MP3</a> (<a href="{output_wav_filename}" target="_blank">WAV</a>,<a href="{output_ogg_filename}" target="_blank">OGG</a>) was ready in {execution_time_minutes:.2f} minutes = {execution_time_seconds:.2f} seconds.', msg_type='chat')
+
+        # Close the PDF file
+        pdf_file.close()
+    except Exception as e:
+        log.error(f"Error converting {pdf_input_filename} to audio: {e}")
+        cat.send_ws_message(content=f"Error converting <b>{pdf_input_filename}</b> to audio: {e}", msg_type='chat')
+
 
 # End of convert_pdf_to_audio()
 
