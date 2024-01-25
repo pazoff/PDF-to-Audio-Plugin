@@ -1,5 +1,7 @@
 import os
+import shutil
 import time
+from datetime import datetime
 import subprocess
 import PyPDF2
 from pydub import AudioSegment
@@ -329,6 +331,45 @@ def delete_file_and_audio_folder(folder_path, filename):
     except Exception as e:
         return f"An unexpected error occurred: {e}"
 
+def backup_folder(source_folder, destination_folder):
+    try:
+        # Check if the source folder exists
+        if not os.path.exists(source_folder):
+            raise FileNotFoundError(f"Source folder '{source_folder}' does not exist.")
+
+        # Get the current date
+        today_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        # Modify the destination folder name with the current date
+        destination_folder_with_date = f"{destination_folder}-{today_date}"
+
+
+        # Copy the contents of the source folder to the modified destination folder
+        shutil.copytree(source_folder, os.path.join(destination_folder_with_date, os.path.basename(source_folder)))
+
+        # Return a success message
+        return f"Backup completed successfully: -> {destination_folder_with_date}"
+
+    except Exception as e:
+        # Handle any errors that may occur during the operation
+        return f"Error during backup: {e}"
+
+def remove_folder(folder_path):
+    try:
+        # Check if the folder exists
+        if not os.path.exists(folder_path):
+            raise FileNotFoundError(f"Folder '{folder_path}' does not exist.")
+
+        # Remove the folder and its contents
+        shutil.rmtree(folder_path)
+
+        # Return a success message
+        return f"Folder and its contents removed successfully: {folder_path}"
+
+    except Exception as e:
+        # Handle any errors that may occur during the operation
+        return f"Error during folder removal: {e}"
+
 
 class ConvertParser(BaseBlobParser, ABC):
     
@@ -395,6 +436,12 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
                 else:
                     return {"output": "Please, type a <b>pdf-file.pdf</b> to be removed: <i>pdf2mp3 remove <b>pdf-file.pdf</b></i>"}
 
+            if args[0] == "backup":
+                return {"output": backup_folder(pdf_data_dir, "/app/cat/data/pdftoaudio")}
+
+            if args[0] == "cleanup":
+                return {"output": remove_folder(pdf_data_dir)}
+
             pdf_filename_to_convert = args[0]
             response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
             return_direct = True
@@ -402,7 +449,7 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
             pdf_files_available = str(find_pdf_files(pdf_data_dir, only_not_converted = True))
             if len(pdf_files_available) >= 2:
                 pdf_files_available = pdf_files_available[1:-1]
-            response = f"<b>How to convert a PDF file to Audio:</b><br>1.<b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file<b>.pdf.bin</b></i><br>2.<b>Upload</b> the <i>pdf-file<b>.pdf.bin</b></i> via <b>Upload file</b><br>3.<b>Type:</b> <i>pdf2mp3 pdf-file<b>.pdf</b></i><br>{pdf_files_available}<br><b>Type:</b> <i>pdf2mp3 list</i> to download your audio files<br><b>Type:</b> <i>pdf2mp3 remove pdf-file<b>.pdf</b></i> to remove the file and its audio collection"
+            response = f"<b>How to convert a PDF file to Audio:</b><br>1.<b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file<b>.pdf.bin</b></i><br>2.<b>Upload</b> the <i>pdf-file<b>.pdf.bin</b></i> via <b>Upload file</b><br>3.<b>Type:</b> <i>pdf2mp3 pdf-file<b>.pdf</b></i><br>{pdf_files_available}<br><b>Type:</b> <i>pdf2mp3 list</i> - to download your audio files<br><b>Type:</b> <i>pdf2mp3 backup</i> - to backup your audio collection to the cat/data folder<br><b>Type:</b> <i>pdf2mp3 remove pdf-file<b>.pdf</b></i> - to remove the <b>file and its audio collection</b><br><b>Type:</b> <i>pdf2mp3 cleanup</i> - to remove <b>all your audio collection</b>. <b>No</b> questions asked!"
             return_direct = True
 
 
