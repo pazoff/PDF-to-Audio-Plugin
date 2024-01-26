@@ -12,9 +12,12 @@ PDF to Audio Cat plugin for your [Cheshire cat](https://github.com/cheshire-cat-
 <a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-it.pdf.mp3" target="_blank">Sample Italian</a>
 
 ## How to use it?
-* Download the <b>PDF-to-Audio-Plugin</b> folder into the <b>cat/plugins</b> one. 
-* <b>Usage: Type</b> <i>pdf2mp3
-* Conversion of PDFs with too many pages (>200) could be resource intensive task and can take a long time, depending on your hardware!
+Download the <b>PDF-to-Audio-Plugin</b> folder into the <b>cat/plugins</b> one.
+
+<b>How to convert a PDF file to Audio:</b><br>1.<b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file<b>.pdf.bin</b></i><br>2.<b>Upload</b> the <i>pdf-file<b>.pdf.bin</b></i> via <b>Upload file</b><br>3.<b>Type:</b> <i>pdf2mp3 pdf-file<b>.pdf</b></i><br><br><b>Type:</b> <i>pdf2mp3 <b>-p:3:5</b> pdf-file<b>.pdf</b></i> - to convert only pages from 3 to 5 from the file.<br><b>Type:</b> <i>pdf2mp3 <b>list</b></i> - to download your audio files<br><b>Type:</b> <i>pdf2mp3 <b>backup</b></i> - to backup your audio collection to the cat/data folder<br><b>Type:</b> <i>pdf2mp3 <b>remove</b> pdf-file<b>.pdf</b></i> - to remove the <b>file and its audio collection</b><br><b>Type:</b> <i>pdf2mp3 <b>cleanup</b></i> - to remove <b>all your audio collection</b>. <b>No</b> questions asked!
+
+Conversion of PDFs with too many pages (>200) could be resource intensive task and can take a long time, depending on your hardware!
+
 
 ### Example:
 <img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/725a5015923d75360d0328f478017b437570e61e/pdf-to-mp3-cat.png">
