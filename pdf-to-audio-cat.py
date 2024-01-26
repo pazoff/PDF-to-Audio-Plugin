@@ -385,10 +385,10 @@ def list_audio_files(folder_path):
             pdf_file_num_pages = get_pdf_page_count(folder_path + "/" + pdf_file)
 
             if os.path.exists(audio_folder) and os.path.isdir(audio_folder):
-                result.append(f"<b>{pdf_base} - {pdf_file_num_pages} pages</b>: <a href='{audio_folder}/{pdf_base}.mp3' target='_blank'>MP3</a> <a href='{audio_folder}/{pdf_base}.wav' target='_blank'>WAV</a> <a href='{audio_folder}/{pdf_base}.ogg' target='_blank'>OGG</a>")
+                result.append(f"<b>{pdf_base}</b> - <i>{pdf_file_num_pages}</i> pages: <a href='{audio_folder}/{pdf_base}.mp3' target='_blank'>MP3</a> <a href='{audio_folder}/{pdf_base}.wav' target='_blank'>WAV</a> <a href='{audio_folder}/{pdf_base}.ogg' target='_blank'>OGG</a>")
         
             else:
-                result.append(f"<b>{pdf_base} - {pdf_file_num_pages} pages</b>: No audio files found")
+                result.append(f"<b>{pdf_base}</b> - <i>{pdf_file_num_pages}</i> pages: No audio files found")
 
         return result
 
