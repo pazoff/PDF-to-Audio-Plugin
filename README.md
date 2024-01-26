@@ -7,6 +7,8 @@ PDF to Audio Cat plugin for your [Cheshire cat](https://github.com/cheshire-cat-
 
 <a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-Snow-white.pdf.mp3" target="_blank">Sample</a>
 
+<a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-rus.mp3" target="_blank">Sample Russian</a>
+
 ## How to use it?
 * Download the <b>PDF-to-Audio-Plugin</b> folder into the <b>cat/plugins</b> one. 
 * <b>Usage: Type</b> <i>pdf2mp3
