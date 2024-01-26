@@ -39,6 +39,6 @@ Added functions to manage the audio collection
 
 Added Reader selection in the plugin settings
     
-
+<img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/img/4-reader-select.png">
 
 
