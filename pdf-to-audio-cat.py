@@ -171,8 +171,10 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
         pdf_file = open(pdf_input_filename, 'rb')
         pdf_reader = PyPDF2.PdfReader(pdf_file)
         pdf_pages = len(pdf_reader.pages)
-        if int(last_pdf_page) == -1:
+        if (int(last_pdf_page) == -1) or (last_pdf_page > pdf_pages):
             last_pdf_page = pdf_pages
+        if first_pdf_page > last_pdf_page:
+            first_pdf_page = 1
         print("Processing the PDF(pages from " + str(first_pdf_page) + " to " + str(
             last_pdf_page) + "), extracting and formatting the text ...")
         cat.send_ws_message(content="Processing the PDF pages from " + str(first_pdf_page) + " to " + str(
@@ -285,7 +287,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
 
 # End of convert_pdf_to_audio()
 
-def do_convert_pdf_to_audio(pdf_file_name, cat):
+def do_convert_pdf_to_audio(pdf_file_name, cat, start_page=None, end_page=None):
     
     filepath = pdf_data_dir + pdf_file_name
     
@@ -312,7 +314,16 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
     settings = cat.mad_hatter.get_plugin().load_settings()
     selected_reader = settings.get("Reader")
     
-    tr = threading.Thread(target=convert_pdf_to_audio, args=(filepath, wav_file_name, mp3_file_name, txt_file_name, selected_reader, 1, -1, cat))
+    if start_page and end_page:
+        if (start_page < 1) or (start_page > end_page):
+            start_page = 1
+        if end_page < start_page:
+            end_page = -1
+    else:
+        start_page = 1
+        end_page = -1
+    
+    tr = threading.Thread(target=convert_pdf_to_audio, args=(filepath, wav_file_name, mp3_file_name, txt_file_name, selected_reader, start_page, end_page, cat))
     tr.start()
     return f"Converting <b>{pdf_file_name}</b> to audio in the background. You can continue using the Cat ..."
 
@@ -528,6 +539,30 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
             if args[0] == "cleanup":
                 return {"output": remove_folder(pdf_data_dir)}
 
+            if args[0].startswith("-p:"):
+                parameter, *subargs = args[0].split(maxsplit=1)
+                
+                # Extracting the page numbers part
+                pages_part = parameter[len("-p:"):]
+
+                # Splitting the range into individual page numbers
+                page_numbers = pages_part.split(':')
+
+                if len(page_numbers) == 2 and all(page.isdigit() for page in page_numbers):
+                    start_page = int(page_numbers[0])
+                    end_page = int(page_numbers[1])
+                else:
+                    return {"output": "Invalid usage of -p parameter. Pages must be integers: <i>pdf2mp3 -p:<b>1:5</b> pdf-file.pdf</i>"}
+
+                if subargs:
+                    # Extracting the filename
+                    pdf_filename_to_convert = subargs[0]
+                    response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat, start_page=start_page, end_page=end_page)
+                    return {"output": response}
+                else:
+                    return {"output": "Please, type a <b>pdf-file.pdf</b> to be converted: <i>pdf2mp3 -p:1:5 <b>pdf-file.pdf</b></i>"}
+
+
             pdf_filename_to_convert = args[0]
             response = do_convert_pdf_to_audio(pdf_filename_to_convert, cat)
             return_direct = True
@@ -535,7 +570,7 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
             pdf_files_available = str(find_pdf_files(pdf_data_dir, only_not_converted = True))
             if len(pdf_files_available) >= 2:
                 pdf_files_available = pdf_files_available[1:-1]
-            response = f"<b>How to convert a PDF file to Audio:</b><br>1.<b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file<b>.pdf.bin</b></i><br>2.<b>Upload</b> the <i>pdf-file<b>.pdf.bin</b></i> via <b>Upload file</b><br>3.<b>Type:</b> <i>pdf2mp3 pdf-file<b>.pdf</b></i><br>{pdf_files_available}<br><b>Type:</b> <i>pdf2mp3 list</i> - to download your audio files<br><b>Type:</b> <i>pdf2mp3 backup</i> - to backup your audio collection to the cat/data folder<br><b>Type:</b> <i>pdf2mp3 remove pdf-file<b>.pdf</b></i> - to remove the <b>file and its audio collection</b><br><b>Type:</b> <i>pdf2mp3 cleanup</i> - to remove <b>all your audio collection</b>. <b>No</b> questions asked!"
+            response = f"<b>How to convert a PDF file to Audio:</b><br>1.<b>Rename</b> your <i>pdf-file.pdf</i> to <i>pdf-file<b>.pdf.bin</b></i><br>2.<b>Upload</b> the <i>pdf-file<b>.pdf.bin</b></i> via <b>Upload file</b><br>3.<b>Type:</b> <i>pdf2mp3 pdf-file<b>.pdf</b></i><br>{pdf_files_available}<br><b>Type:</b> <i>pdf2mp3 <b>-p:3:5</b> pdf-file<b>.pdf</b></i> - to convert only pages from 3 to 5 from the file.<br><b>Type:</b> <i>pdf2mp3 <b>list</b></i> - to download your audio files<br><b>Type:</b> <i>pdf2mp3 <b>backup</b></i> - to backup your audio collection to the cat/data folder<br><b>Type:</b> <i>pdf2mp3 <b>remove</b> pdf-file<b>.pdf</b></i> - to remove the <b>file and its audio collection</b><br><b>Type:</b> <i>pdf2mp3 <b>cleanup</b></i> - to remove <b>all your audio collection</b>. <b>No</b> questions asked!"
             return_direct = True
 
 
