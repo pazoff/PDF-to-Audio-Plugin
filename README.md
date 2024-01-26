@@ -36,6 +36,8 @@ Added functions to manage the audio collection
 
   
 <img width="85%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/img/3-pdf2mp3-remove.png">
+
+Added Reader selection in the plugin settings
     
 
 
