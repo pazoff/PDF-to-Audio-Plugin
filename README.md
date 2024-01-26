@@ -5,9 +5,11 @@ Turn ★ into ⭐ (top-right corner) if you like the project!
 
 PDF to Audio Cat plugin for your [Cheshire cat](https://github.com/cheshire-cat-ai/core) involves converting text content in PDF files into audio (MP3,OGG,WAV), enabling you to listen to the document instead of reading it.
 
-<a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-Snow-white.pdf.mp3" target="_blank">Sample</a>
+<a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-Snow-white.pdf.mp3" target="_blank">Sample English</a>
 
 <a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-rus.mp3" target="_blank">Sample Russian</a>
+
+<a href="https://github.com/pazoff/PDF-to-Audio-Plugin/raw/main/audio/sample-it.pdf.mp3" target="_blank">Sample Italian</a>
 
 ## How to use it?
 * Download the <b>PDF-to-Audio-Plugin</b> folder into the <b>cat/plugins</b> one. 
