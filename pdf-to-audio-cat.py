@@ -6,7 +6,7 @@ import subprocess
 import PyPDF2
 from pydub import AudioSegment
 from typing import Dict
-from cat.mad_hatter.decorators import tool, hook
+from cat.mad_hatter.decorators import tool, hook, plugin
 from cat.log import log
 import threading
 from langchain.document_loaders.base import BaseBlobParser
@@ -14,8 +14,32 @@ from langchain.docstore.document import Document
 from langchain.document_loaders.blob_loaders.schema import Blob
 from typing import Iterator
 from abc import ABC
+from enum import Enum
+from pydantic import BaseModel
 
 
+# Settings
+
+# Select box
+class ReaderSelect(Enum):
+    Alice: str = 'Alice'
+    Eve: str = 'Eve'
+    Emily: str = 'Emily'
+    Daniel: str = 'Daniel'
+    Dave: str = 'Dave'
+    Angi: str = 'Angi'
+    Riki: str = 'Riki'
+
+
+class PDFToAudioCatSettings(BaseModel):
+    # Select
+    Reader: ReaderSelect = ReaderSelect.Alice
+
+
+# Give your settings schema to the Cat.
+@plugin
+def settings_schema():
+    return PDFToAudioCatSettings.schema()
 
 pdf_data_dir = "/admin/assets/pdftoaudio/"
 
@@ -54,36 +78,41 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
         mimic_cmd = ["mimic3", "--cuda"]
 
         # Selected voice
-        if selected_voice not in ["1", "2", "3", "4", "5", "6", "7"]:
-            selected_voice = "5"
-        if selected_voice == "2":
+        if selected_voice not in ["Emily", "Eve", "Daniel", "Angi", "Alice", "Dave", "Riki"]:
+            selected_voice = "Alice"
+        if selected_voice == "Eve":
             mimic_cmd.append("--voice")
             mimic_cmd.append("en_US/ljspeech_low")
-        if selected_voice == "3":
+        if selected_voice == "Daniel":
             mimic_cmd.append("--voice")
             mimic_cmd.append("en_US/hifi-tts_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("6097")
-        if selected_voice == "4":
+        if selected_voice == "Angi":
             mimic_cmd.append("--voice")
             mimic_cmd.append("en_US/hifi-tts_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("92")
-        if selected_voice == "5":
+        if selected_voice == "Alice":
             mimic_cmd.append("--voice")
             mimic_cmd.append("en_US/vctk_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("p303")
-        if selected_voice == "6":
+        if selected_voice == "Dave":
             mimic_cmd.append("--voice")
             mimic_cmd.append("en_US/cmu-arctic_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("aew")
-        if selected_voice == "7":
+        if selected_voice == "Riki":
             mimic_cmd.append("--voice")
             mimic_cmd.append("en_US/hifi-tts_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("6097")
+        if selected_voice == "Emily":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("en_US/m-ailabs_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("mary_ann")
 
 
         # Read the contents of each page
@@ -227,8 +256,11 @@ def do_convert_pdf_to_audio(pdf_file_name, cat):
     mp3_file_name = folder_path+"/"+pdf_file_name+".mp3"
     txt_file_name = folder_path+"/"+pdf_file_name+".txt"
 
+    # Load the settings
+    settings = cat.mad_hatter.get_plugin().load_settings()
+    selected_reader = settings.get("Reader")
     
-    tr = threading.Thread(target=convert_pdf_to_audio, args=(filepath, wav_file_name, mp3_file_name, txt_file_name, "5", 1, -1, cat))
+    tr = threading.Thread(target=convert_pdf_to_audio, args=(filepath, wav_file_name, mp3_file_name, txt_file_name, selected_reader, 1, -1, cat))
     tr.start()
     return f"Converting <b>{pdf_file_name}</b> to audio in the background. You can continue using the Cat ..."
 
