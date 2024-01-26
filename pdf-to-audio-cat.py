@@ -21,6 +21,7 @@ from pydantic import BaseModel
 # Settings
 
 # Select box
+# Add more readers from: https://mycroftai.github.io/mimic3-voices/
 class ReaderSelect(Enum):
     Alice: str = 'Alice'
     Eve: str = 'Eve'
