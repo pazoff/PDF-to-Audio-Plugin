@@ -69,6 +69,29 @@ def install_ffmpeg():
         print(f"Error installing ffmpeg: {e}")
 
 
+def get_pdf_page_count(pdf_path):
+    """
+    Get the number of pages in a PDF file.
+
+    Parameters:
+    - pdf_path (str): The path to the PDF file.
+
+    Returns:
+    - int: The number of pages in the PDF.
+    """
+    try:
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            page_count = len(pdf_reader.pages)
+            return page_count
+    except FileNotFoundError:
+        print(f"Error: File not found - {pdf_path}")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+
 def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, output_mp3_filename: str,
                          output_text_filename: str, selected_voice: str,
                          first_pdf_page: int, last_pdf_page: int, cat):
@@ -335,11 +358,13 @@ def list_audio_files(folder_path):
             pdf_base = pdf_file
             audio_folder = os.path.join(folder_path, f"{pdf_base}-audio")
 
+            pdf_file_num_pages = get_pdf_page_count(folder_path + "/" + pdf_file)
+
             if os.path.exists(audio_folder) and os.path.isdir(audio_folder):
-                result.append(f"<b>{pdf_base}</b>: <a href='{audio_folder}/{pdf_base}.mp3' target='_blank'>MP3</a> <a href='{audio_folder}/{pdf_base}.wav' target='_blank'>WAV</a> <a href='{audio_folder}/{pdf_base}.ogg' target='_blank'>OGG</a>")
+                result.append(f"<b>{pdf_base} - {pdf_file_num_pages} pages</b>: <a href='{audio_folder}/{pdf_base}.mp3' target='_blank'>MP3</a> <a href='{audio_folder}/{pdf_base}.wav' target='_blank'>WAV</a> <a href='{audio_folder}/{pdf_base}.ogg' target='_blank'>OGG</a>")
         
             else:
-                result.append(f"<b>{pdf_base}</b>: No audio files found")
+                result.append(f"<b>{pdf_base} - {pdf_file_num_pages} pages</b>: No audio files found")
 
         return result
 
