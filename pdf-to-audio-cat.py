@@ -33,6 +33,7 @@ class ReaderSelect(Enum):
     Riccardo: str = 'Riccardo'
     Nikolaev: str = 'Nikolaev'
     Hajdurova: str = 'Hajdurova'
+    Minaev: str = 'Minaev'
 
 
 class PDFToAudioCatSettings(BaseModel):
@@ -105,7 +106,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
         mimic_cmd = ["mimic3", "--cuda"]
 
         # Selected voice
-        if selected_voice not in ["Emily", "Eve", "Daniel", "Angi", "Alice", "Dave", "Riki", "Angelina", "Riccardo", "Nikolaev", "Hajdurova"]:
+        if selected_voice not in ["Emily", "Eve", "Daniel", "Angi", "Alice", "Dave", "Riki", "Angelina", "Riccardo", "Nikolaev", "Hajdurova", "Minaev"]:
             selected_voice = "Alice"
         if selected_voice == "Eve":
             mimic_cmd.append("--voice")
@@ -158,6 +159,11 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             mimic_cmd.append("ru_RU/multi_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("hajdurova")
+        if selected_voice == "Minaev":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("ru_RU/multi_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("minaev")
 
 
         # Read the contents of each page
