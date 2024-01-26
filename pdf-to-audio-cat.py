@@ -29,6 +29,9 @@ class ReaderSelect(Enum):
     Dave: str = 'Dave'
     Angi: str = 'Angi'
     Riki: str = 'Riki'
+    Angelina: str = 'Angelina'
+    Riccardo: str = 'Riccardo'
+    Nikolaev: str = 'Nikolaev'
 
 
 class PDFToAudioCatSettings(BaseModel):
@@ -78,7 +81,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
         mimic_cmd = ["mimic3", "--cuda"]
 
         # Selected voice
-        if selected_voice not in ["Emily", "Eve", "Daniel", "Angi", "Alice", "Dave", "Riki"]:
+        if selected_voice not in ["Emily", "Eve", "Daniel", "Angi", "Alice", "Dave", "Riki", "Angelina", "Riccardo", "Nikolaev"]:
             selected_voice = "Alice"
         if selected_voice == "Eve":
             mimic_cmd.append("--voice")
@@ -113,6 +116,19 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             mimic_cmd.append("en_US/m-ailabs_low")
             mimic_cmd.append("--speaker")
             mimic_cmd.append("mary_ann")
+        if selected_voice == "Angelina":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("it_IT/mls_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("8384")
+        if selected_voice == "Riccardo":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("it_IT/riccardo-fasol_low")
+        if selected_voice == "Nikolaev":
+            mimic_cmd.append("--voice")
+            mimic_cmd.append("ru_RU/multi_low")
+            mimic_cmd.append("--speaker")
+            mimic_cmd.append("nikolaev")
 
 
         # Read the contents of each page
