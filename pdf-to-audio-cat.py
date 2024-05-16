@@ -24,6 +24,7 @@ from pydantic import BaseModel
 # Add more readers from: https://rhasspy.github.io/piper-samples/
 class ReaderSelect(Enum):
     Alice: str = 'Alice'
+    Eve: str = 'Eve'
     Dave: str = 'Dave'
     Ruslan: str = 'Ruslan'
 
@@ -168,7 +169,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             piper_cmd = ["piper", "--cuda"]
 
             # Selected voice
-            if selected_voice not in ["Alice", "Dave", "Ruslan"]:
+            if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve"]:
                 selected_voice = "Dave"
             if selected_voice == "Alice":
                 piper_cmd.append("--model")
@@ -179,6 +180,11 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             if selected_voice == "Ruslan":
                 piper_cmd.append("--model")
                 piper_cmd.append("ru_RU-ruslan-medium")
+            if selected_voice == "Eve":
+                piper_cmd.append("--model")
+                piper_cmd.append("en_GB-vctk-medium")
+                piper_cmd.append("-s")
+                piper_cmd.append("99")
 
             piper_cmd.append(f"--output_file {output_wav_filename}")
 
