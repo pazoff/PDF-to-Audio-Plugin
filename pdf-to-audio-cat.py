@@ -21,20 +21,11 @@ from pydantic import BaseModel
 # Settings
 
 # Select box
-# Add more readers from: https://mycroftai.github.io/mimic3-voices/
+# Add more readers from: https://rhasspy.github.io/piper-samples/
 class ReaderSelect(Enum):
     Alice: str = 'Alice'
-    Eve: str = 'Eve'
-    Emily: str = 'Emily'
-    Daniel: str = 'Daniel'
     Dave: str = 'Dave'
-    Angi: str = 'Angi'
-    Riki: str = 'Riki'
-    Angelina: str = 'Angelina'
-    Riccardo: str = 'Riccardo'
-    Nikolaev: str = 'Nikolaev'
-    Hajdurova: str = 'Hajdurova'
-    Minaev: str = 'Minaev'
+    Ruslan: str = 'Ruslan'
 
 
 class PDFToAudioCatSettings(BaseModel):
@@ -103,68 +94,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
         # Record the start time
         start_time = time.time()
 
-        # Text to speech command
-        mimic_cmd = ["mimic3", "--cuda"]
-
-        # Selected voice
-        if selected_voice not in ["Emily", "Eve", "Daniel", "Angi", "Alice", "Dave", "Riki", "Angelina", "Riccardo", "Nikolaev", "Hajdurova", "Minaev"]:
-            selected_voice = "Alice"
-        if selected_voice == "Eve":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/ljspeech_low")
-        if selected_voice == "Daniel":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/hifi-tts_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("6097")
-        if selected_voice == "Angi":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/hifi-tts_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("92")
-        if selected_voice == "Alice":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/vctk_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("p303")
-        if selected_voice == "Dave":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/cmu-arctic_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("aew")
-        if selected_voice == "Riki":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/hifi-tts_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("6097")
-        if selected_voice == "Emily":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("en_US/m-ailabs_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("mary_ann")
-        if selected_voice == "Angelina":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("it_IT/mls_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("8384")
-        if selected_voice == "Riccardo":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("it_IT/riccardo-fasol_low")
-        if selected_voice == "Nikolaev":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("ru_RU/multi_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("nikolaev")
-        if selected_voice == "Hajdurova":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("ru_RU/multi_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("hajdurova")
-        if selected_voice == "Minaev":
-            mimic_cmd.append("--voice")
-            mimic_cmd.append("ru_RU/multi_low")
-            mimic_cmd.append("--speaker")
-            mimic_cmd.append("minaev")
+        
 
 
         # Read the contents of each page
@@ -232,20 +162,40 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             # Open the text file
             read_text_file = open(output_text_filename, "r")
             # Open the wav file
-            save_wav_file = open(output_wav_filename, "wb")
+            #save_wav_file = open(output_wav_filename, "wb")
 
-            # Print mimic commands
+            # Text to speech command
+            piper_cmd = ["piper", "--cuda"]
+
+            # Selected voice
+            if selected_voice not in ["Alice", "Dave", "Ruslan"]:
+                selected_voice = "Dave"
+            if selected_voice == "Alice":
+                piper_cmd.append("--model")
+                piper_cmd.append("en_US-lessac-high")
+            if selected_voice == "Dave":
+                piper_cmd.append("--model")
+                piper_cmd.append("en_US-ryan-high")
+            if selected_voice == "Ruslan":
+                piper_cmd.append("--model")
+                piper_cmd.append("ru_RU-ruslan-medium")
+
+            piper_cmd.append(f"--output_file {output_wav_filename}")
+
+            # Print piper commands
             m_cmd = ""
-            for cmd in mimic_cmd:
+            for cmd in piper_cmd:
                 m_cmd += (cmd + " ")
             print("\n* Executing: " + m_cmd + " < " + output_text_filename + " > " + output_wav_filename + "\n")
 
-            # Execute mimic3 conversion
+            # Execute piper conversion
 
-            subprocess.run(mimic_cmd, stdin=read_text_file, stdout=save_wav_file)
+            command_string = " ".join(piper_cmd)
+
+            subprocess.run(command_string, stdin=read_text_file, shell=True, check=True)
 
             # Close the wav and txt files
-            save_wav_file.close()
+            #save_wav_file.close()
             read_text_file.close()
 
         # Convert the wav file to mp3 and ogg
