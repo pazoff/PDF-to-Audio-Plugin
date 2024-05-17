@@ -186,7 +186,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
                 piper_cmd.append("-s")
                 piper_cmd.append("99")
 
-            piper_cmd.append(f"--output_file {output_wav_filename}")
+            piper_cmd.append(f"--output_file '{output_wav_filename}'")
 
             # Print piper commands
             m_cmd = ""
