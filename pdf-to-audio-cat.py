@@ -25,7 +25,9 @@ from pydantic import BaseModel
 class ReaderSelect(Enum):
     Alice: str = 'Alice'
     Eve: str = 'Eve'
+    Amy: str = 'Amy'
     Dave: str = 'Dave'
+    Joe: str = 'Joe'
     Ruslan: str = 'Ruslan'
 
 
@@ -169,7 +171,7 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             piper_cmd = ["piper", "--cuda"]
 
             # Selected voice
-            if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve"]:
+            if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Joe"]:
                 selected_voice = "Dave"
             if selected_voice == "Alice":
                 piper_cmd.append("--model")
@@ -185,6 +187,12 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
                 piper_cmd.append("en_GB-vctk-medium")
                 piper_cmd.append("-s")
                 piper_cmd.append("99")
+            if selected_voice == "Amy":
+                piper_cmd.append("--model")
+                piper_cmd.append("en_US-amy-medium")
+            if selected_voice == "Joe":
+                piper_cmd.append("--model")
+                piper_cmd.append("en_US-joe-medium")
 
             piper_cmd.append(f"--output_file '{output_wav_filename}'")
 
