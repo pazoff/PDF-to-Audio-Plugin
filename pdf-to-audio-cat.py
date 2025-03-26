@@ -16,24 +16,85 @@ from typing import Iterator
 from abc import ABC
 from enum import Enum
 from pydantic import BaseModel
-
+from openai import OpenAI
 
 # Settings
 
 # Select box
-# Add more readers from: https://rhasspy.github.io/piper-samples/
 class ReaderSelect(Enum):
-    Alice: str = 'Alice'
-    Eve: str = 'Eve'
-    Amy: str = 'Amy'
-    Dave: str = 'Dave'
-    Joe: str = 'Joe'
-    Ruslan: str = 'Ruslan'
+    af_alloy = "af_alloy"
+    af_aoede = "af_aoede"
+    af_bella = "af_bella"
+    af_heart = "af_heart"
+    af_jadzia = "af_jadzia"
+    af_jessica = "af_jessica"
+    af_kore = "af_kore"
+    af_nicole = "af_nicole"
+    af_nova = "af_nova"
+    af_river = "af_river"
+    af_sarah = "af_sarah"
+    af_sky = "af_sky"
+    af_v0 = "af_v0"
+    af_v0bella = "af_v0bella"
+    af_v0irulan = "af_v0irulan"
+    af_v0nicole = "af_v0nicole"
+    af_v0sarah = "af_v0sarah"
+    af_v0sky = "af_v0sky"
+    am_adam = "am_adam"
+    am_echo = "am_echo"
+    am_eric = "am_eric"
+    am_fenrir = "am_fenrir"
+    am_liam = "am_liam"
+    am_michael = "am_michael"
+    am_onyx = "am_onyx"
+    am_puck = "am_puck"
+    am_santa = "am_santa"
+    am_v0adam = "am_v0adam"
+    am_v0gurney = "am_v0gurney"
+    am_v0michael = "am_v0michael"
+    bf_alice = "bf_alice"
+    bf_emma = "bf_emma"
+    bf_lily = "bf_lily"
+    bf_v0emma = "bf_v0emma"
+    bf_v0isabella = "bf_v0isabella"
+    bm_daniel = "bm_daniel"
+    bm_fable = "bm_fable"
+    bm_george = "bm_george"
+    bm_lewis = "bm_lewis"
+    bm_v0george = "bm_v0george"
+    bm_v0lewis = "bm_v0lewis"
+    ef_dora = "ef_dora"
+    em_alex = "em_alex"
+    em_santa = "em_santa"
+    ff_siwis = "ff_siwis"
+    hf_alpha = "hf_alpha"
+    hf_beta = "hf_beta"
+    hm_omega = "hm_omega"
+    hm_psi = "hm_psi"
+    if_sara = "if_sara"
+    im_nicola = "im_nicola"
+    jf_alpha = "jf_alpha"
+    jf_gongitsune = "jf_gongitsune"
+    jf_nezumi = "jf_nezumi"
+    jf_tebukuro = "jf_tebukuro"
+    jm_kumo = "jm_kumo"
+    pf_dora = "pf_dora"
+    pm_alex = "pm_alex"
+    pm_santa = "pm_santa"
+    zf_xiaobei = "zf_xiaobei"
+    zf_xiaoni = "zf_xiaoni"
+    zf_xiaoxiao = "zf_xiaoxiao"
+    zf_xiaoyi = "zf_xiaoyi"
+    zm_yunjian = "zm_yunjian"
+    zm_yunxi = "zm_yunxi"
+    zm_yunxia = "zm_yunxia"
+    zm_yunyang = "zm_yunyang"
 
 
 class PDFToAudioCatSettings(BaseModel):
     # Select
-    Reader: ReaderSelect = ReaderSelect.Alice
+    base_url: str = "http://host.docker.internal:8880/v1"
+    Reader: ReaderSelect = ReaderSelect.af_alloy
 
 
 # Give your settings schema to the Cat.
@@ -89,6 +150,33 @@ def get_pdf_page_count(pdf_path):
         return None
 
 
+def run_kokoro_process(text, output_filename, cat, base_url, model="kokoro"):
+    # Load settings to get the selected voice
+    settings = cat.mad_hatter.get_plugin().load_settings()
+    selected_voice = settings.get("Reader", ReaderSelect.af_sky)
+
+    try:
+        generate_kokoro_speech(text, output_filename, model=model, voice=selected_voice, base_url=base_url)
+        kokoro_audio_player = f"<audio controls autoplay><source src='{output_filename}' type='audio/wav'>Your browser does not support the audio tag.</audio>"
+        cat.send_ws_message(content=kokoro_audio_player, msg_type='chat')
+    except Exception as e:
+        print(f"Kokoro: Error occurred: {str(e)}")
+
+
+
+# Generate the audio file using the Kokoro API
+def generate_kokoro_speech(text, output_file, model="kokoro", voice="af_sky", base_url="http://host.docker.internal:8880/v1"):
+    client = OpenAI(base_url=base_url, api_key="not-needed")
+    try:
+        with client.audio.speech.with_streaming_response.create(
+            model=model,
+            voice=voice,  
+            input=text
+        ) as response:
+            response.stream_to_file(output_file)
+    except Exception as e:
+        print(f"Kokoro: Error occurred: {str(e)}")
+
 def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, output_mp3_filename: str,
                          output_text_filename: str, selected_voice: str,
                          first_pdf_page: int, last_pdf_page: int, cat):
@@ -96,9 +184,6 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
     try:
         # Record the start time
         start_time = time.time()
-
-        
-
 
         # Read the contents of each page
         pdf_file = open(pdf_input_filename, 'rb')
@@ -167,80 +252,16 @@ def convert_pdf_to_audio(pdf_input_filename: str, output_wav_filename: str, outp
             # Open the wav file
             #save_wav_file = open(output_wav_filename, "wb")
 
-            # Text to speech command
-            piper_cmd = ["piper", "--cuda"]
-
-            # Selected voice
-            if selected_voice not in ["Alice", "Dave", "Ruslan", "Eve", "Amy", "Joe"]:
-                selected_voice = "Dave"
-            if selected_voice == "Alice":
-                piper_cmd.append("--model")
-                piper_cmd.append("en_US-lessac-high")
-            if selected_voice == "Dave":
-                piper_cmd.append("--model")
-                piper_cmd.append("en_US-ryan-high")
-            if selected_voice == "Ruslan":
-                piper_cmd.append("--model")
-                piper_cmd.append("ru_RU-ruslan-medium")
-            if selected_voice == "Eve":
-                piper_cmd.append("--model")
-                piper_cmd.append("en_GB-vctk-medium")
-                piper_cmd.append("-s")
-                piper_cmd.append("99")
-            if selected_voice == "Amy":
-                piper_cmd.append("--model")
-                piper_cmd.append("en_US-amy-medium")
-            if selected_voice == "Joe":
-                piper_cmd.append("--model")
-                piper_cmd.append("en_US-joe-medium")
-
-            piper_cmd.append(f"--output_file '{output_wav_filename}'")
-
-            # Print piper commands
-            m_cmd = ""
-            for cmd in piper_cmd:
-                m_cmd += (cmd + " ")
-            print("\n* Executing: " + m_cmd + " < " + output_text_filename + " > " + output_wav_filename + "\n")
-
-            # Execute piper conversion
-
-            command_string = " ".join(piper_cmd)
-
-            subprocess.run(command_string, stdin=read_text_file, shell=True, check=True)
+            # Generate the audio using the Kokoro API
+            settings = cat.mad_hatter.get_plugin().load_settings()
+            kokoro_base_url = settings.get("base_url")
+            if kokoro_base_url is None:
+                kokoro_base_url = "http://host.docker.internal:8880/v1"
+            run_kokoro_process(text, output_mp3_filename, cat, kokoro_base_url, model="kokoro")
 
             # Close the wav and txt files
             #save_wav_file.close()
             read_text_file.close()
-
-        # Convert the wav file to mp3 and ogg
-        if os.path.exists(output_wav_filename):
-            if os.path.getsize(output_wav_filename) > 0:
-                # Convert to mp3
-                print("\n* Converting " + output_wav_filename + " file to " + output_mp3_filename + " ...")
-                AudioSegment.from_wav(output_wav_filename).export(output_mp3_filename, format="mp3",
-                                                                  bitrate="320")
-                
-                # Record the end time
-                end_time = time.time()
-
-                # Calculate the execution time in seconds
-                execution_time_seconds = end_time - start_time
-
-                # Convert the execution time to minutes
-                execution_time_minutes = execution_time_seconds / 60
-
-                print(f"Done in {execution_time_minutes:.2f} minutes")
-                
-                # Convert to ogg
-                output_ogg_filename = output_mp3_filename[:(len(output_mp3_filename) - 4)] + ".ogg"
-                print("\n* Converting " + output_wav_filename + " file to " + output_ogg_filename)
-                AudioSegment.from_wav(output_wav_filename).export(output_ogg_filename, format="ogg")
-                print("Done.")
-
-                # Generate the audio player HTML and send it as a chat message
-                audio_player = "<audio controls><source src='" + output_mp3_filename + "' type='audio/wav'>Your browser does not support the audio tag.</audio>"
-                cat.send_ws_message(content=audio_player, msg_type='chat')
-                cat.send_ws_message(content=f'The <a href="{output_mp3_filename}" target="_blank">MP3</a> (<a href="{output_wav_filename}" target="_blank">WAV</a>,<a href="{output_ogg_filename}" target="_blank">OGG</a>) was ready in {execution_time_minutes:.2f} minutes = {execution_time_seconds:.2f} seconds.', msg_type='chat')
 
         # Close the PDF file
         pdf_file.close()
@@ -475,7 +496,8 @@ def agent_fast_reply(fast_reply, cat) -> Dict:
     user_message = cat.working_memory["user_message_json"]["text"]
 
     if user_message.startswith("pdf2mp3"):
-        check_ffmpeg_installation()
+        # if ffmpeg is needed, uncomment the following line
+        #check_ffmpeg_installation()
 
         # Split user_message into two strings
         _, *args = user_message.split(maxsplit=1)
