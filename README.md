@@ -3,7 +3,7 @@ Turn ★ into ⭐ (top-right corner) if you like the project!
 
 ⚠️ https://github.com/remsky/Kokoro-FastAPI have to be installed to use the new version of this plugin with Kokoro TTS.
 
-
+* Visit the [Discord Channel](https://discord.com/channels/1092359754917089350/1354320653494386698) for more information.
 
 <img width="50%" src="https://raw.githubusercontent.com/pazoff/PDF-to-Audio-Plugin/main/logo-pdf-to-mp3-cat.jpg">
 
