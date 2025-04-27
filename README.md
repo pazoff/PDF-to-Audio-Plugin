@@ -1,6 +1,8 @@
 # PDF to Audio Cat
 Turn ★ into ⭐ (top-right corner) if you like the project!
 
+<a href="https://www.buymeacoffee.com/pazoff" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 190px !important;" ></a>
+
 ⚠️ https://github.com/remsky/Kokoro-FastAPI have to be installed to use the new version (0.2.0) of this plugin with Kokoro TTS.
 
 * Visit the [Discord Channel](https://discord.com/channels/1092359754917089350/1354320653494386698) for more information.
